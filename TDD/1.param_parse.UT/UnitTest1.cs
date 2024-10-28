@@ -33,8 +33,15 @@ public class UnitTest1
     [Fact]
     public void Should_set_logging_to_false_when_logging_not_present()
     {
-        Options options = Args.Parse();
+        Options options = Args.Parse("");
         Assert.False(options.logging);
+    }
+
+    [Fact]
+    public void Should_parse_port_correctly_when_exist()
+    {
+        Options options = Args.Parse("-l -p 8080");
+        Assert.Equal(8080, options.port);
     }
 
 }
