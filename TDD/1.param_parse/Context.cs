@@ -1,37 +1,26 @@
 public class Context
 {
-    private Dictionary<Type, object?> components = new();
+    private readonly Dictionary<Type, Func<object?>> _provider = new();
 
     public void Bind<T>(T type, object instance) where T : Type
     {
-        components.Add(type, instance);
+        _provider.Add(type, () => instance);
     }
 
     public void Bind<T1, T2>(T1 type, T2 instanceType) where T1 : Type where T2 : Type, T1
-
     {
-        var instance = Activator.CreateInstance(instanceType);
-        components.Add(type, instance);
+        _provider.Add(type, () =>
+        {
+            var constructor = instanceType.GetConstructors().First();
+            var parameters = constructor.GetParameters();
+            var parameterInstances = parameters.Select(p => Get<object>(p.ParameterType)).ToArray();
+            return constructor.Invoke(parameterInstances);
+        });
     }
 
     public T? Get<T>(Type type) where T : class
     {
-        components.TryGetValue(type, out var instance);
-        return instance as T;
-    }
-}
-
-public class Provider<T> where T : class
-{
-    private readonly Func<T> _func;
-
-    public Provider(Func<T> func)
-    {
-        _func = func;
-    }
-
-    public virtual T? Get()
-    {
-        return _func();
+        _provider.TryGetValue(type, out var func);
+        return func?.Invoke() as T;
     }
 }

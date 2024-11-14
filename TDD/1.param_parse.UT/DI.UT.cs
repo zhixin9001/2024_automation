@@ -6,9 +6,24 @@ public class ComponentConstructionTests
     {
     }
 
+    interface IComponentA
+    {
+    }
+
     class Component : IComponent
     {
     }
+
+    class ComponentA : IComponentA
+    {
+        public IComponent Component { get; }
+
+        public ComponentA(IComponent component)
+        {
+            Component = component;
+        }
+    }
+
 
     //ConsructorIjection
     //  No args ctor
@@ -31,6 +46,19 @@ public class ComponentConstructionTests
         var instance = context.Get<IComponent>(typeof(IComponent));
         Assert.NotNull(instance);
         Assert.IsType<Component>(instance);
+    }
+
+    [Fact]
+    public void ShouldBindTypeToAClassWithDependency()
+    {
+        Context context = new();
+        context.Bind(typeof(IComponent), typeof(Component));
+        context.Bind(typeof(IComponentA), typeof(ComponentA));
+        var instance = context.Get<IComponentA>(typeof(IComponentA));
+        Assert.NotNull(instance);
+        Assert.IsType<ComponentA>(instance);
+        Assert.NotNull(((ComponentA)instance).Component);
+        Assert.IsType<Component>(((ComponentA)instance).Component);
     }
     //FailedInjection
 
