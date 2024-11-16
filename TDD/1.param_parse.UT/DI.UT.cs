@@ -2,28 +2,12 @@ namespace _1.param_parse.UT;
 
 public class ComponentConstructionTests
 {
-    interface IComponent
+    private Context _context;
+
+    public ComponentConstructionTests()
     {
+        _context = new Context();
     }
-
-    interface IComponentA
-    {
-    }
-
-    class Component : IComponent
-    {
-    }
-
-    class ComponentA : IComponentA
-    {
-        public IComponent Component { get; }
-
-        public ComponentA(IComponent component)
-        {
-            Component = component;
-        }
-    }
-
 
     //ConsructorIjection
     //  No args ctor
@@ -32,18 +16,16 @@ public class ComponentConstructionTests
     [Fact]
     public void ShouldBindTypeToASpecificInstance()
     {
-        Context context = new();
         var component = new Component();
-        context.Bind(typeof(IComponent), component);
-        Assert.Same(component, context.Get<IComponent>(typeof(IComponent)));
+        _context.Bind(typeof(IComponent), component);
+        Assert.Same(component, _context.Get<IComponent>(typeof(IComponent)));
     }
 
     [Fact]
     public void ShouldBindTypeToAClassWithDefaultCtor()
     {
-        Context context = new();
-        context.Bind(typeof(IComponent), typeof(Component));
-        var instance = context.Get<IComponent>(typeof(IComponent));
+        _context.Bind(typeof(IComponent), typeof(Component));
+        var instance = _context.Get<IComponent>(typeof(IComponent));
         Assert.NotNull(instance);
         Assert.IsType<Component>(instance);
     }
@@ -51,10 +33,9 @@ public class ComponentConstructionTests
     [Fact]
     public void ShouldBindTypeToAClassWithDependency()
     {
-        Context context = new();
-        context.Bind(typeof(IComponent), typeof(Component));
-        context.Bind(typeof(IComponentA), typeof(ComponentA));
-        var instance = context.Get<IComponentA>(typeof(IComponentA));
+        _context.Bind(typeof(IComponent), typeof(Component));
+        _context.Bind(typeof(IComponentA), typeof(ComponentA));
+        var instance = _context.Get<IComponentA>(typeof(IComponentA));
         Assert.NotNull(instance);
         Assert.IsType<ComponentA>(instance);
         Assert.NotNull(((ComponentA)instance).Component);
@@ -62,5 +43,45 @@ public class ComponentConstructionTests
     }
     //FailedInjection
 
+    [Fact]
+    public void ShouldThrowExceptionWhenMultipleCtor()
+    {
+        _context.Bind(typeof(IComponent), typeof(ComponentWithMultipleCtor));
+        Assert.Throws<ApplicationException>(() => _context.Get<IComponent>(typeof(IComponent)));
+    }
+
     //MethodInjection
+}
+
+interface IComponent
+{
+}
+
+interface IComponentA
+{
+}
+
+class Component : IComponent
+{
+}
+
+class ComponentA : IComponentA
+{
+    public IComponent Component { get; }
+
+    public ComponentA(IComponent component)
+    {
+        Component = component;
+    }
+}
+
+class ComponentWithMultipleCtor : IComponent
+{
+    public ComponentWithMultipleCtor(string a)
+    {
+    }
+
+    public ComponentWithMultipleCtor(string a, string b)
+    {
+    }
 }

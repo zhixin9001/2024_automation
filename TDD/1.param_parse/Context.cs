@@ -11,6 +11,8 @@ public class Context
     {
         _provider.Add(type, () =>
         {
+            var constructors = instanceType.GetConstructors();
+            if (constructors.Length > 1) throw new ApplicationException("Too many constructors");
             var constructor = instanceType.GetConstructors().First();
             var parameters = constructor.GetParameters();
             var parameterInstances = parameters.Select(p => Get<object>(p.ParameterType)).ToArray();
