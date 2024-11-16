@@ -16,6 +16,7 @@ public class Context
             var constructor = instanceType.GetConstructors().First();
             var parameters = constructor.GetParameters();
             var parameterInstances = parameters.Select(p => Get<object>(p.ParameterType)).ToArray();
+            if (parameterInstances.Any(a => a is null)) throw new EntryPointNotFoundException();
             return constructor.Invoke(parameterInstances);
         });
     }

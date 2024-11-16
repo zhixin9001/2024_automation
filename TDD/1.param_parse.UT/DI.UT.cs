@@ -50,6 +50,13 @@ public class ComponentConstructionTests
         Assert.Throws<ApplicationException>(() => _context.Get<IComponent>(typeof(IComponent)));
     }
 
+    
+    [Fact]
+    public void ShouldThrowExceptionWhenDependencyNotFound()
+    {
+        _context.Bind(typeof(IComponentA), typeof(ComponentA));
+        Assert.Throws<EntryPointNotFoundException>(() => _context.Get<IComponentA>(typeof(IComponentA)));
+    }
     //MethodInjection
 }
 
