@@ -62,6 +62,12 @@ public class Container_UT
         _container.Add<ICyclicB, CyclicB>();
         Assert.Throws<SystemException>(() => _container.Get<ICyclicB>());
     }
+
+    [Fact]
+    public void ShouldThrowExceptionWhenInterfact()
+    {
+        Assert.Throws<ArgumentException>(()=> _container.Add<ICyclicA, ICyclicB>());
+    }
 }
 
 interface ICyclicA

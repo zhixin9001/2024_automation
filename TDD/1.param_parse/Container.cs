@@ -7,6 +7,7 @@ public class Container
 
     public void Add<TService, TImp>()
     {
+        if(typeof(TImp).IsInterface) throw new ArgumentException("TImp should not be an interface");
         _dictionary.Add(typeof(TService), typeof(TImp));
     }
 
