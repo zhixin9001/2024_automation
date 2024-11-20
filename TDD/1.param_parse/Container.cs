@@ -2,31 +2,47 @@
 
 public class Container
 {
-    private Dictionary<Type, Type> _dictionary = new();
+    private readonly Dictionary<Type, Type> _dictionary = new();
+    private readonly Dictionary<Type, bool> _dependencies = new();
 
     public void Add<TService, TImp>()
     {
         _dictionary.Add(typeof(TService), typeof(TImp));
     }
 
-    private Type Get(Type type)
+    private object Get(Type type)
     {
-        if (_dictionary.TryGetValue(type, out var imp) == false)
+        if (!_dictionary.TryGetValue(type, out var imp))
         {
             throw new EntryPointNotFoundException();
         }
 
-        return imp;
-    }
+        if (_dependencies.TryGetValue(type, out var isConstructing))
+        {
+            if (isConstructing)
+            {
+                throw new SystemException("Cyclic dependency detected");
+            }
 
-    public T? Get<T>()
-    {
-        var imp = Get(typeof(T));
+            _dependencies[type] = true;
+        }
+        else
+        {
+            _dependencies.Add(type, true);
+        }
+
         var constructors = imp.GetConstructors();
         if (constructors.Length > 1) throw new ApplicationException("Too many constructors");
         var constructor = constructors.First();
         var parameters = constructor.GetParameters();
-        var parameterInstances = parameters.Select(p => Activator.CreateInstance(Get(p.ParameterType))).ToArray();
-        return (T?)constructor.Invoke(parameterInstances);
+        var parameterInstances = parameters.Select(p => Get(p.ParameterType)).ToArray();
+        var result = constructor.Invoke(parameterInstances);
+        _dependencies[type] = false;
+        return result;
+    }
+
+    public T? Get<T>()
+    {
+        return (T?)Get(typeof(T));
     }
 }

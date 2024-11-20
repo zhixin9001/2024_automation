@@ -38,9 +38,80 @@ public class Container_UT
     }
 
     [Fact]
+    public void ShouldBindTypeToAClassWithMultiLevelDependency()
+    {
+        _container.Add<IMultiLevelA, MultiLevelA>();
+        _container.Add<IMultiLevelB, MultiLevelB>();
+        _container.Add<IMultiLevelC, MultiLevelC>();
+        var instance = _container.Get<IMultiLevelA>();
+        Assert.NotNull(instance);
+        Assert.IsType<MultiLevelA>(instance);
+    }
+
+    [Fact]
     public void ShouldThrowExceptionWhenDependencyNotFound()
     {
         _container.Add<IComponentA, ComponentA>();
         Assert.Throws<EntryPointNotFoundException>(() => _container.Get<IComponentA>());
     }
+
+    [Fact]
+    public void ShouldThrowExceptionWhenCyclicDependency()
+    {
+        _container.Add<ICyclicA, CyclicA>();
+        _container.Add<ICyclicB, CyclicB>();
+        Assert.Throws<SystemException>(() => _container.Get<ICyclicB>());
+    }
+}
+
+interface ICyclicA
+{
+}
+
+interface ICyclicB
+{
+}
+
+class CyclicA : ICyclicA
+{
+    public CyclicA(ICyclicB cyclicB)
+    {
+    }
+}
+
+class CyclicB : ICyclicB
+{
+    public CyclicB(ICyclicA cyclicA)
+    {
+    }
+}
+
+interface IMultiLevelA
+{
+}
+
+interface IMultiLevelB
+{
+}
+
+interface IMultiLevelC
+{
+}
+
+class MultiLevelA : IMultiLevelA
+{
+    public MultiLevelA(IMultiLevelB multiLevelB)
+    {
+    }
+}
+
+class MultiLevelB : IMultiLevelB
+{
+    public MultiLevelB(IMultiLevelC multiLevelC)
+    {
+    }
+}
+
+class MultiLevelC : IMultiLevelC
+{
 }
