@@ -64,12 +64,18 @@ public class Container_UT
     }
 
     [Fact]
-    public void ShouldThrowExceptionWhenInterfact()
+    public void ShouldThrowExceptionWhenIsInterfaceOrAbstract()
     {
+        
         Assert.Throws<ArgumentException>(()=> _container.Add<ICyclicA, ICyclicB>());
+        Assert.Throws<ArgumentException>(()=> _container.Add<ICyclicA, AbstractClass>());
     }
 }
 
+abstract class AbstractClass
+{
+    
+}
 interface ICyclicA
 {
 }
