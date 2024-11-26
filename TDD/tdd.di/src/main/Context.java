@@ -1,7 +1,5 @@
 package main;
 
-import test.ContainerTest;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,7 +21,7 @@ public class Context {
         }
         Class<?> imp = componentImps.get(type);
         try {
-            return (T) imp.newInstance();
+            return (T) imp.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
