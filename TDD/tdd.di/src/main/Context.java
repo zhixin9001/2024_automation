@@ -4,26 +4,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Context {
-    private final Map<Class<?>, Object> components = new HashMap<>();
-    private final Map<Class<?>, Class<?>> componentImps = new HashMap<>();
+    private final Map<Class<?>, Provider<?>> providers = new HashMap<>();
 
     public <T> void bind(Class<T> type, T instance) {
-        components.put(type, instance);
+        providers.put(type, (Provider<T>) () -> instance);
     }
 
     public <T, TImp extends T> void bind(Class<T> type, Class<TImp> imp) {
-        componentImps.put(type, imp);
+        providers.put(type, (Provider<T>) () -> {
+            try {
+                return (T) imp.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public <T> T get(Class<T> type) {
-        if (components.containsKey(type)) {
-            return (T) components.get(type);
-        }
-        Class<?> imp = componentImps.get(type);
-        try {
-            return (T) imp.getDeclaredConstructor().newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return (T) providers.get(type).get();
     }
+
+}
+
+interface Provider<T> {
+    T get();
 }
