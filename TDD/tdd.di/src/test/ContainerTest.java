@@ -1,6 +1,7 @@
 package test;
 
 import main.Context;
+import main.IllegalComponentException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,14 +31,14 @@ public class ContainerTest {
         @Nested
         public class ConstructorInjection {
             @Test
-            public void should_bind_type_with_default_constructor() {
+            public void should_bind_type_with_default_constructor() throws IllegalComponentException {
                 context.bind(Component.class, ComponentWithDefaultCtor.class);
                 Component instance = context.get(Component.class);
                 assertNotNull(instance);
             }
 
             @Test
-            public void should_bind_type_with_injection_constructor() {
+            public void should_bind_type_with_injection_constructor() throws IllegalComponentException {
                 Dependency dependency = new Dependency() {
                 };
                 context.bind(Dependency.class, dependency);
@@ -48,7 +49,7 @@ public class ContainerTest {
             }
 
             @Test
-            public void should_bind_type_with_transitive_dependencies() {
+            public void should_bind_type_with_transitive_dependencies() throws IllegalComponentException {
                 context.bind(Component.class, ComponentWithInjectCtor.class);
                 context.bind(Dependency.class, DependencyWithInjectCtor.class);
                 context.bind(String.class, "str-dependency");
@@ -57,6 +58,21 @@ public class ContainerTest {
                 DependencyWithInjectCtor dependency = (DependencyWithInjectCtor) instance.dependency;
                 assertNotNull(instance);
                 assertEquals("str-dependency", dependency.dependency);
+            }
+
+            @Test
+            public void should_throw_error_when_multi_ctor_with_dependency() {
+                assertThrows(IllegalComponentException.class,() -> context.bind(Component.class, ComponentWithMultiCtor.class));
+            }
+
+            @Test
+            public void should_throw_error_when_no_default_ctor() {
+                assertThrows(IllegalComponentException.class,() -> context.bind(Component.class, ComponentNoDefaultCtor.class));
+            }
+
+            @Test
+            public void should_throw_error_when_dependency_not_exist() {
+                assertThrows(IllegalComponentException.class,() -> context.bind(Component.class, ComponentNoDefaultCtor.class));
             }
         }
     }

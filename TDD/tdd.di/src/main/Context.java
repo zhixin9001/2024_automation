@@ -1,5 +1,6 @@
 package main;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +15,13 @@ public class Context {
         providers.put(type, (Provider<T>) () -> instance);
     }
 
-    public <T, TImp extends T> void bind(Class<T> type, Class<TImp> imp) {
+    public <T, TImp extends T> void bind(Class<T> type, Class<TImp> imp) throws IllegalComponentException {
+        Constructor<?>[] constructors = stream(imp.getDeclaredConstructors()).filter(c -> c.isAnnotationPresent(Inject.class)).toArray(Constructor<?>[]::new);
+        if (constructors.length > 1 ||
+                (constructors.length == 0 &&
+                        stream(imp.getConstructors()).filter(c -> c.getParameters().length == 0).findFirst().map(c -> false).orElse(true))) {
+            throw new IllegalComponentException();
+        }
         providers.put(type, (Provider<T>) () -> {
             try {
                 Constructor<TImp> constructor = getConstructor(imp);
