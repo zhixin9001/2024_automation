@@ -1,4 +1,4 @@
 package main;
 
-public class IllegalComponentException extends Exception {
+public class IllegalComponentException extends RuntimeException {
 }
