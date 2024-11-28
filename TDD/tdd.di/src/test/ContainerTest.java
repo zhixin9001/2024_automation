@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import test.utils.*;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ContainerTest {
@@ -34,7 +36,7 @@ public class ContainerTest {
             @Test
             public void should_bind_type_with_default_constructor() throws IllegalComponentException, DependencyNotFoundException {
                 context.bind(Component.class, ComponentWithDefaultCtor.class);
-                Component instance = context.get(Component.class);
+                Component instance = context.get(Component.class).get();
                 assertNotNull(instance);
             }
 
@@ -44,7 +46,7 @@ public class ContainerTest {
                 };
                 context.bind(Dependency.class, dependency);
                 context.bind(Component.class, ComponentWithInjectCtor.class);
-                ComponentWithInjectCtor instance = (ComponentWithInjectCtor) context.get(Component.class);
+                ComponentWithInjectCtor instance = (ComponentWithInjectCtor) context.get(Component.class).get();
                 assertNotNull(instance);
                 assertSame(instance.dependency, dependency);
             }
@@ -55,7 +57,7 @@ public class ContainerTest {
                 context.bind(Dependency.class, DependencyWithInjectCtor.class);
                 context.bind(String.class, "str-dependency");
 
-                ComponentWithInjectCtor instance = (ComponentWithInjectCtor) context.get(Component.class);
+                ComponentWithInjectCtor instance = (ComponentWithInjectCtor) context.get(Component.class).get();
                 DependencyWithInjectCtor dependency = (DependencyWithInjectCtor) instance.dependency;
                 assertNotNull(instance);
                 assertEquals("str-dependency", dependency.dependency);
@@ -80,6 +82,12 @@ public class ContainerTest {
             public void should_throw_error_when_dependency_not_found() {
                 context.bind(Component.class, ComponentWithInjectCtor.class);
                 assertThrows(RuntimeException.class, () -> context.get(Component.class));
+            }
+
+            @Test
+            public void should_throw_error_when_no_instance() {
+                Optional<Component> component = context.get(Component.class);
+                assertTrue(component.isEmpty());
             }
         }
     }

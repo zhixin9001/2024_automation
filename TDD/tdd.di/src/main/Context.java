@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Arrays.*;
 
@@ -18,13 +19,8 @@ public class Context {
         Constructor<TImp> constructor = getConstructor(imp);
         providers.put(type, (Provider<T>) () -> {
             try {
-                Object[] dependencies = stream(constructor.getParameters()).map(p -> {
-                    try {
-                        return get(p.getType());
-                    } catch (RuntimeException e) {
-                        throw new RuntimeException(e);
-                    }
-                }).toArray(Object[]::new);
+                Object[] dependencies = stream(constructor.getParameters())
+                        .map(p -> get(p.getType()).orElseThrow(() -> new RuntimeException("Dependency not found"))).toArray(Object[]::new);
                 return (T) constructor.newInstance(dependencies);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -44,9 +40,8 @@ public class Context {
         });
     }
 
-    public <T> T get(Class<T> type) throws RuntimeException {
-        if (!providers.containsKey(type)) throw new RuntimeException("Dependency not found");
-        return (T) providers.get(type).get();
+    public <T> Optional<T> get(Class<T> type) {
+        return Optional.ofNullable(providers.get(type)).map(p -> (T) p.get());
     }
 }
 
