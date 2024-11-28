@@ -1,13 +1,9 @@
 package main;
 
-import org.junit.jupiter.params.aggregator.ArgumentAccessException;
-
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static java.util.Arrays.*;
 
@@ -19,13 +15,16 @@ public class Context {
     }
 
     public <T, TImp extends T> void bind(Class<T> type, Class<TImp> imp) throws IllegalComponentException {
-        Constructor<?>[] constructors = stream(imp.getDeclaredConstructors()).filter(c -> c.isAnnotationPresent(Inject.class)).toArray(Constructor<?>[]::new);
-
-
         Constructor<TImp> constructor = getConstructor(imp);
         providers.put(type, (Provider<T>) () -> {
             try {
-                Object[] dependencies = stream(constructor.getParameters()).map(p -> get(p.getType())).toArray(Object[]::new);
+                Object[] dependencies = stream(constructor.getParameters()).map(p -> {
+                    try {
+                        return get(p.getType());
+                    } catch (RuntimeException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).toArray(Object[]::new);
                 return (T) constructor.newInstance(dependencies);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -45,10 +44,10 @@ public class Context {
         });
     }
 
-    public <T> T get(Class<T> type) {
+    public <T> T get(Class<T> type) throws RuntimeException {
+        if (!providers.containsKey(type)) throw new RuntimeException("Dependency not found");
         return (T) providers.get(type).get();
     }
-
 }
 
 interface Provider<T> {
