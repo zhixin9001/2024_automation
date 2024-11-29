@@ -28,7 +28,7 @@ public class ContainerTest {
             };
 
             context.bind(Component.class, component);
-            assertSame(component, context.get(Component.class));
+            assertSame(component, context.get(Component.class).get());
         }
 
         @Nested
@@ -85,7 +85,7 @@ public class ContainerTest {
             }
 
             @Test
-            public void should_throw_error_when_no_instance() {
+            public void should_be_empty_when_no_instance() {
                 Optional<Component> component = context.get(Component.class);
                 assertTrue(component.isEmpty());
             }
