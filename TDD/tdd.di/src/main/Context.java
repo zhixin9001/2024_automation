@@ -17,15 +17,7 @@ public class Context {
 
     public <T, TImp extends T> void bind(Class<T> type, Class<TImp> imp) throws IllegalComponentException {
         Constructor<TImp> constructor = getConstructor(imp);
-        providers.put(type, (Provider<T>) () -> {
-            try {
-                Object[] dependencies = stream(constructor.getParameters())
-                        .map(p -> get(p.getType()).orElseThrow(() -> new RuntimeException("Dependency not found"))).toArray(Object[]::new);
-                return (T) constructor.newInstance(dependencies);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        providers.put(type, new ConstructorInjectionProvider<TImp>(constructor));
     }
 
     private static <T> Constructor<T> getConstructor(Class<T> imp) {
@@ -43,7 +35,33 @@ public class Context {
     public <T> Optional<T> get(Class<T> type) {
         return Optional.ofNullable(providers.get(type)).map(p -> (T) p.get());
     }
+
+
+    class ConstructorInjectionProvider<T> implements Provider {
+        private final Constructor<T> constructor;
+        private boolean isConstructing;
+
+        public ConstructorInjectionProvider(Constructor<T> constructor) {
+            this.constructor = constructor;
+        }
+
+        @Override
+        public Object get() {
+            if (isConstructing) throw new RuntimeException("Cyclic dependency found");
+            try {
+                isConstructing = true;
+                Object[] dependencies = stream(this.constructor.getParameters())
+                        .map(p -> Context.this.get(p.getType()).orElseThrow(() -> new RuntimeException("Dependency not found"))).toArray(Object[]::new);
+                return this.constructor.newInstance(dependencies);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                isConstructing = false;
+            }
+        }
+    }
 }
+
 
 interface Provider<T> {
     T get();
