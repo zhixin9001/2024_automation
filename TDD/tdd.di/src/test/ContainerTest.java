@@ -82,7 +82,19 @@ public class ContainerTest {
             @Test
             public void should_throw_error_when_dependency_not_found() {
                 context.bind(Component.class, ComponentWithInjectCtor.class);
-                assertThrows(RuntimeException.class, () -> context.get(Component.class));
+                DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> context.get(Component.class));
+                assertSame(Dependency.class, exception.getDependency());
+                assertSame(Component.class, exception.getComponent());
+            }
+
+            @Test
+            public void should_throw_error_when_long_cycle_dependency_not_found() {
+                context.bind(Component.class, ComponentWithInjectCtor.class);
+                context.bind(Dependency.class, DependencyWithInjectCtor.class);
+
+                DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class, () -> context.get(Component.class));
+                assertSame(String.class, exception.getDependency());
+                assertSame(Dependency.class, exception.getComponent());
             }
 
             @Test

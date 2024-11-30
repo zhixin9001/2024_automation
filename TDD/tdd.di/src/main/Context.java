@@ -1,6 +1,7 @@
 package main;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ public class Context {
 
     public <T, TImp extends T> void bind(Class<T> type, Class<TImp> imp) throws IllegalComponentException {
         Constructor<TImp> constructor = getConstructor(imp);
-        providers.put(type, new ConstructorInjectionProvider<TImp>(constructor));
+        providers.put(type, new ConstructorInjectionProvider<TImp>(type, constructor));
     }
 
     private static <T> Constructor<T> getConstructor(Class<T> imp) {
@@ -38,10 +39,12 @@ public class Context {
 
 
     class ConstructorInjectionProvider<T> implements Provider {
+        private Class<?> componentType;
         private final Constructor<T> constructor;
         private boolean isConstructing;
 
-        public ConstructorInjectionProvider(Constructor<T> constructor) {
+        public ConstructorInjectionProvider(Class<?> componentType, Constructor<T> constructor) {
+            this.componentType = componentType;
             this.constructor = constructor;
         }
 
@@ -51,9 +54,9 @@ public class Context {
             try {
                 isConstructing = true;
                 Object[] dependencies = stream(this.constructor.getParameters())
-                        .map(p -> Context.this.get(p.getType()).orElseThrow(() -> new RuntimeException("Dependency not found"))).toArray(Object[]::new);
+                        .map(p -> Context.this.get(p.getType()).orElseThrow(() -> new DependencyNotFoundException(componentType, p.getType()))).toArray(Object[]::new);
                 return this.constructor.newInstance(dependencies);
-            } catch (Exception e) {
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             } finally {
                 isConstructing = false;
