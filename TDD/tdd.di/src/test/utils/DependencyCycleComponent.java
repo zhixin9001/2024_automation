@@ -1,7 +1,6 @@
-package main;
+package test.utils;
 
-import test.utils.Component;
-import test.utils.Dependency;
+import main.Inject;
 
 public class DependencyCycleComponent implements Dependency {
     @Inject
