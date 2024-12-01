@@ -4,7 +4,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.*;
@@ -14,8 +13,8 @@ public class ContextConfig {
     private final Map<Class<?>, List<Class<?>>> dependencies = new HashMap<>();
 
     public <T> void bind(Class<T> type, T instance) {
-        providers.put(type, (Provider<T>) context -> instance);
-        dependencies.put(type, asList());
+        providers.put(type, (Provider<T>) _ -> instance);
+        dependencies.put(type, List.of());
     }
 
     public <T, TImp extends T> void bind(Class<T> type, Class<TImp> imp) throws IllegalComponentException {
@@ -56,8 +55,8 @@ public class ContextConfig {
         }
     }
 
-    class ConstructorInjectionProvider<T> implements Provider {
-        private Class<?> componentType;
+    static class ConstructorInjectionProvider<T> implements Provider {
+        private final Class<?> componentType;
         private final Constructor<T> constructor;
         private boolean isConstructing;
 
