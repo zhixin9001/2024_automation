@@ -128,6 +128,22 @@ public class ContainerTest {
                 assertSame(3, components.size());
             }
         }
+
+        @Nested
+        public class FieldInjection {
+            @Test
+            public void should_inject_via_field() {
+                Dependency dependency = new Dependency() {
+                };
+
+                config.bind(Dependency.class, dependency);
+                config.bind(ComponentAWithFieldInject.class, ComponentAWithFieldInject.class);
+
+                ComponentAWithFieldInject component = config.getContext().get(ComponentAWithFieldInject.class).get();
+
+                assertSame(component.dependency, dependency);
+            }
+        }
     }
 }
 
