@@ -1,10 +1,7 @@
 package test;
 
-import main.ContextConfig;
-import main.CyclicDependencyException;
+import main.*;
 import test.utils.DependencyCycleComponent;
-import main.DependencyNotFoundException;
-import main.IllegalComponentException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -135,6 +132,20 @@ public class ContainerTest {
             public void should_inject_via_field() {
                 Dependency dependency = new Dependency() {
                 };
+
+                config.bind(Dependency.class, dependency);
+                config.bind(ComponentAWithFieldInject.class, ComponentAWithFieldInject.class);
+
+                ComponentAWithFieldInject component = config.getContext().get(ComponentAWithFieldInject.class).get();
+
+                assertSame(component.dependency, dependency);
+            }
+            @Test
+            public void should_inject_via_fieldA() {
+                Dependency dependency = new Dependency() {
+                };
+
+                Context context=Mockito
 
                 config.bind(Dependency.class, dependency);
                 config.bind(ComponentAWithFieldInject.class, ComponentAWithFieldInject.class);
