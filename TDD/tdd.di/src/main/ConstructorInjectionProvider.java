@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 
-class ConstructorInjectionProvider<T> implements Provider {
+public class ConstructorInjectionProvider<T> implements Provider {
     private final Constructor<T> constructor;
 
     public ConstructorInjectionProvider(Class<T> imp) {

@@ -1,6 +1,8 @@
 package test;
 
 import main.*;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import test.utils.DependencyCycleComponent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 
 public class ContainerTest {
     @Nested
@@ -140,19 +143,19 @@ public class ContainerTest {
 
                 assertSame(component.dependency, dependency);
             }
+
             @Test
             public void should_inject_via_fieldA() {
                 Dependency dependency = new Dependency() {
                 };
+                Context context = Mockito.mock(Context.class);
+                Mockito.when(context.get(eq(Dependency.class))).thenReturn(Optional.of(dependency));
 
-                Context context=Mockito
+                ConstructorInjectionProvider<ComponentAWithFieldInject> provider = new ConstructorInjectionProvider<>(ComponentAWithFieldInject.class);
 
-                config.bind(Dependency.class, dependency);
-                config.bind(ComponentAWithFieldInject.class, ComponentAWithFieldInject.class);
+                ComponentAWithFieldInject component = (ComponentAWithFieldInject) provider.get(context);
 
-                ComponentAWithFieldInject component = config.getContext().get(ComponentAWithFieldInject.class).get();
-
-                assertSame(component.dependency, dependency);
+                assertSame(dependency, component.dependency);
             }
         }
     }
